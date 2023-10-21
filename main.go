@@ -3,14 +3,14 @@ package main
 import (
 	"net/http"
 
-	"github.com/bio426/chocomatch-back/datasource"
+	// "github.com/bio426/chocomatch-back/datasource"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
-	db := datasource.InitPostgres
+	// db := datasource.InitPostgres
 	e := echo.New()
 
 	// Server config
