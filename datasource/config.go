@@ -5,6 +5,7 @@ import (
 )
 
 type Config = struct {
+	// Envs
 	PG_HOST      string
 	PG_PORT      string
 	PG_USER      string
@@ -16,6 +17,9 @@ type Config = struct {
 	CLD_CLOUD    string
 	CLD_KEY      string
 	CLD_SECRET   string
+
+	// Values
+	AuthTokenDuration int32
 }
 
 func InitConfig() Config {
@@ -34,6 +38,8 @@ func InitConfig() Config {
 	result.CLD_CLOUD = os.Getenv("CLD_CLOUD")
 	result.CLD_KEY = os.Getenv("CLD_KEY")
 	result.CLD_SECRET = os.Getenv("CLD_SECRET")
+
+	result.AuthTokenDuration = 1
 
 	return result
 }

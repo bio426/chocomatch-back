@@ -10,19 +10,26 @@ import (
 
 	"github.com/bio426/chocomatch-back/controller"
 	"github.com/bio426/chocomatch-back/datasource"
+	"github.com/bio426/chocomatch-back/service"
 )
 
 func main() {
 	config := datasource.InitConfig()
 	pg, err := datasource.InitPostgres(config)
 	if err != nil {
-		log.Panic("",err, pg)
+		log.Panic("", err, pg)
 	}
 	rds, err := datasource.InitRedis(config)
 	if err != nil {
 		log.Panic(err, rds)
 	}
 	e := echo.New()
+
+	// Init services
+	authSvc := service.NewAuthService(pg, rds)
+
+	// Init controllers
+	authCtr := controller.NewAuth(&authSvc)
 
 	// Server config
 	e.Debug = true
@@ -41,7 +48,7 @@ func main() {
 	})
 	api := e.Group("api")
 	auth := api.Group("/auth")
-	auth.POST("/login", controller.Auth.Login)
+	auth.POST("/login", authCtr.Login)
 
 	// Run server
 	e.Logger.Fatal(e.Start(":1323"))

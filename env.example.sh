@@ -2,11 +2,11 @@
 declare -A vars
 
 # Postgres
-vars["PH_HOST"]="localhost"
+vars["PG_HOST"]="localhost"
 vars["PG_PORT"]="5432"
 vars["PG_USER"]="postgres"
 vars["PG_PASSWORD"]="password"
-vars["PG_DATABASE"]="gendor"
+vars["PG_DATABASE"]="chocomatch"
 
 # Redis
 vars["RDS_ADDR"]="localhost:6379"
