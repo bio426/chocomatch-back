@@ -1,16 +1,27 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
-	// "github.com/bio426/chocomatch-back/datasource"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/bio426/chocomatch-back/controller"
+	"github.com/bio426/chocomatch-back/datasource"
 )
 
 func main() {
-	// db := datasource.InitPostgres
+	config := datasource.InitConfig()
+	pg, err := datasource.InitPostgres(config)
+	if err != nil {
+		log.Panic("",err, pg)
+	}
+	rds, err := datasource.InitRedis(config)
+	if err != nil {
+		log.Panic(err, rds)
+	}
 	e := echo.New()
 
 	// Server config
@@ -28,6 +39,11 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, World!")
 	})
+	api := e.Group("api")
+	auth := api.Group("/auth")
+	auth.POST("/login", controller.Auth.Login)
+
+	// Run server
 	e.Logger.Fatal(e.Start(":1323"))
 }
 
