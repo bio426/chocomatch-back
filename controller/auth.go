@@ -20,7 +20,6 @@ func NewAuth(s *service.Auth) *Auth {
 }
 
 func (ctr Auth) Login(c echo.Context) error {
-	ctr.service.Login()
 	input := struct {
 		Email    string `json:"email" validate:"required"`
 		Password string `json:"password" validate:"required"`
@@ -32,6 +31,17 @@ func (ctr Auth) Login(c echo.Context) error {
 	if err := c.Validate(input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
+
+	token, err := ctr.service.Login(c.Request().Context(), input.Email, input.Password)
+	if err != nil {
+		return err
+	}
+
+	cookie := &http.Cookie{
+		Name:  "authToken",
+		Value: token,
+	}
+	c.SetCookie(cookie)
 
 	return c.NoContent(http.StatusNoContent)
 

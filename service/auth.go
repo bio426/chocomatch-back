@@ -26,10 +26,13 @@ func NewAuthService(pg *sql.DB, rds *redis.Client) Auth {
 }
 
 func (s Auth) Login(ctx context.Context, email, password string) (string, error) {
-	row := s.postgres.QueryRowContext(ctx, ``, email)
+	row := s.postgres.QueryRowContext(ctx, `select u.id,u.password from users u where u.email = $1`, email)
 	user := model.User{}
-	row.Scan(user.Id, user.Username)
+	row.Scan(user.Id, user.Password)
 	if err := row.Err(); err != nil {
+		return "", err
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", err
 	}
 	token := uuid.NewString()
