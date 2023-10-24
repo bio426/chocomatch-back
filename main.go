@@ -37,7 +37,11 @@ func main() {
 	e.Validator = &CustomValidator{validator: validator.New()}
 
 	// Server middlewares
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins:     []string{"http://localhost:5174"},
+		AllowMethods:     []string{"*"},
+		AllowCredentials: true,
+	}))
 	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "method=${method}, uri=${uri}, status=${status}\n",
 	}))
@@ -49,6 +53,8 @@ func main() {
 	api := e.Group("api")
 	auth := api.Group("/auth")
 	auth.POST("/login", authCtr.Login)
+	auth.POST("/setcookie", authCtr.GetCookie)
+	auth.GET("/verifycookie", authCtr.VerifyCookie)
 
 	// Run server
 	e.Logger.Fatal(e.Start(":1323"))
