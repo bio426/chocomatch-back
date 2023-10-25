@@ -43,15 +43,21 @@ func (s Auth) Login(ctx context.Context, email, password string) (string, error)
 	return token, nil
 }
 
-func (s Auth) Register(ctx context.Context, nickname, email, phone, password string) error {
-	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+type AuthRegisterArgs struct {
+	Username string
+	Email    string
+	Phone    string
+	Password string
+}
+
+func (s Auth) Register(ctx context.Context, data AuthRegisterArgs) error {
+	hashed, err := bcrypt.GenerateFromPassword([]byte(data.Password), 10)
 	if err != nil {
 		return err
 	}
-
 	_, err = s.postgres.ExecContext(ctx,
-		`insert into users(nickname,email,phone,password) values ($1,$2,$3,$4)`,
-		nickname, email, phone, hashed)
+		`insert into users(username,email,phone,password) values ($1,$2,$3,$4)`,
+		data.Username, data.Email, data.Phone, hashed)
 	if err != nil {
 		return err
 	}

@@ -37,6 +37,36 @@ func (ctr Auth) Login(c echo.Context) error {
 
 }
 
+func (ctr Auth) Register(c echo.Context) error {
+	input := struct {
+		Username string `json:"username" validate:"required"`
+		Email    string `json:"email" validate:"required"`
+		Phone    string `json:"phone"`
+		Password string `json:"password" validate:"required"`
+	}{}
+
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	if err := c.Validate(input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+	// if err := ctr.service.Register(c.Request().Context(), service.AuthRegisterArgs{
+	// 	Username: input.Username,
+	// 	Email:    input.Email,
+	// 	Phone:    input.Phone,
+	// 	Password: input.Password,
+	// }); err != nil {
+	// 	return err
+	// }
+	if err := ctr.service.Register(c.Request().Context(), service.AuthRegisterArgs(input)); err != nil {
+		return err
+	}
+
+	return c.NoContent(http.StatusNoContent)
+
+}
+
 func (ctr Auth) VerifyCookie(c echo.Context) error {
 	cookie, err := c.Cookie("authToken")
 	if err != nil {
@@ -59,7 +89,7 @@ func (ctr Auth) GetCookie(c echo.Context) error {
 		Value:    "xd2",
 		Expires:  time.Now().Add(time.Second * 10),
 		HttpOnly: true,
-		Secure: true,
+		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	}
 	c.SetCookie(cookie)

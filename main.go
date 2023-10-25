@@ -53,6 +53,7 @@ func main() {
 	api := e.Group("api")
 	auth := api.Group("/auth")
 	auth.POST("/login", authCtr.Login)
+	auth.POST("/register", authCtr.Register)
 	auth.POST("/setcookie", authCtr.GetCookie)
 	auth.GET("/verifycookie", authCtr.VerifyCookie)
 
