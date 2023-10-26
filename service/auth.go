@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"database/sql"
+	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -26,17 +29,29 @@ func NewAuthService(pg *sql.DB, rds *redis.Client) Auth {
 }
 
 func (s Auth) Login(ctx context.Context, email, password string) (string, error) {
-	row := s.postgres.QueryRowContext(ctx, `select u.id,u.password from users u where u.email = $1`, email)
 	user := model.User{}
-	row.Scan(user.Id, user.Password)
-	if err := row.Err(); err != nil {
+	if err := s.postgres.QueryRowContext(ctx,
+		`select u.id,u.password from users u where u.email = $1`,
+		email).Scan(
+		&user.Id,
+		&user.Password,
+	); err != nil {
 		return "", err
 	}
+	fmt.Println(user)
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return "", err
 	}
 	token := uuid.NewString()
-	err := s.redis.Set(ctx, token, "asd", 0).Err()
+	expiration := time.Now().Add(time.Minute * 1)
+	err := s.redis.HSet(ctx,
+		token,
+		[]string{
+			"user",
+			strconv.Itoa(int(user.Id)),
+			"expiration",
+			expiration.String()},
+	).Err()
 	if err != nil {
 		return "", err
 	}
@@ -57,10 +72,20 @@ func (s Auth) Register(ctx context.Context, data AuthRegisterArgs) error {
 	}
 	_, err = s.postgres.ExecContext(ctx,
 		`insert into users(username,email,phone,password) values ($1,$2,$3,$4)`,
-		data.Username, data.Email, data.Phone, hashed)
+		data.Username,
+		data.Email,
+		sql.NullString{
+			String: data.Phone,
+			Valid:  data.Phone != "",
+		},
+		hashed)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (s Auth) Verify(ctx context.Context, token string) (bool, error) {
+	return false, nil
 }

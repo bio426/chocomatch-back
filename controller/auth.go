@@ -32,6 +32,20 @@ func (ctr Auth) Login(c echo.Context) error {
 	if err := c.Validate(input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
+	token, err := ctr.service.Login(c.Request().Context(), input.Email, input.Password)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err)
+	}
+
+	cookie := &http.Cookie{
+		Name:     "authToken",
+		Value:    token,
+		Expires:  time.Now().Add(time.Second * 10),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+	}
+	c.SetCookie(cookie)
 
 	return c.NoContent(http.StatusNoContent)
 
@@ -51,14 +65,6 @@ func (ctr Auth) Register(c echo.Context) error {
 	if err := c.Validate(input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, err)
 	}
-	// if err := ctr.service.Register(c.Request().Context(), service.AuthRegisterArgs{
-	// 	Username: input.Username,
-	// 	Email:    input.Email,
-	// 	Phone:    input.Phone,
-	// 	Password: input.Password,
-	// }); err != nil {
-	// 	return err
-	// }
 	if err := ctr.service.Register(c.Request().Context(), service.AuthRegisterArgs(input)); err != nil {
 		return err
 	}
