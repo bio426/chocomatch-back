@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 
@@ -59,7 +61,6 @@ func (s Auth) Login(ctx context.Context, email, password string) (string, error)
 }
 
 type AuthRegisterArgs struct {
-	Username string
 	Email    string
 	Phone    string
 	Password string
@@ -71,8 +72,7 @@ func (s Auth) Register(ctx context.Context, data AuthRegisterArgs) error {
 		return err
 	}
 	_, err = s.postgres.ExecContext(ctx,
-		`insert into users(username,email,phone,password) values ($1,$2,$3,$4)`,
-		data.Username,
+		`insert into users(email,phone,password) values ($1,$2,$3)`,
 		data.Email,
 		sql.NullString{
 			String: data.Phone,
@@ -80,6 +80,9 @@ func (s Auth) Register(ctx context.Context, data AuthRegisterArgs) error {
 		},
 		hashed)
 	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			return errors.New("pg: " + pqErr.Code.Name())
+		}
 		return err
 	}
 
